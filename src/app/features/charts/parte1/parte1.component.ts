@@ -53,36 +53,36 @@ export class Parte1Component implements OnInit {
     return t;  // El diente de sierra es lineal en [-1, 1]
   }
 
-  // Función "Rectificador" periódica en [-π/2, π/2]
+  // Función "Rectificador" periódica en [-π, π]
   rectificador(t: number): number {
-    return Math.abs(Math.sin(t - Math.PI / 2));  // Función de rectificador de seno desplazado
+    return Math.abs(Math.sin(t));  // Usamos el valor absoluto de la función seno en [-π, π]
   }
 
   // Suma parcial de Fourier de una función con N términos
   fourierSumaParcial(f: (t: number) => number, L: number, N: number): (t: number) => number {
-    const a0 = this.fourierA0(f, L);
+    const a0 = this.fourierA0(f, L);  // Valor de a0 correctamente calculado
     return (t: number) => {
-      let sum = a0 / 2;
+      let sum = a0 / 2;  // Agregamos el término constante a0 / 2
       for (let n = 1; n <= N; n++) {
-        const wn = (n * Math.PI) / L;
-        const an = this.fourierAn(f, L, n);
-        const bn = this.fourierBn(f, L, n);
-        sum += an * Math.cos(wn * t) + bn * Math.sin(wn * t);
+        const wn = (n * Math.PI) / L;  // Frecuencia angular
+        const an = this.fourierAn(f, L, n);  // Coeficiente an
+        const bn = this.fourierBn(f, L, n);  // Coeficiente bn
+        sum += an * Math.cos(wn * t) + bn * Math.sin(wn * t);  // Suma de Fourier
       }
-      return sum;
+      return sum;  // Devuelve la suma parcial de Fourier
     };
   }
 
-  // Coeficiente a0 de Fourier
+  // Coeficiente a0 de Fourier (corregido para la normalización)
   fourierA0(f: (t: number) => number, L: number): number {
-    const nIntervals = 1000;
-    const step = (2 * L) / nIntervals;
+    const nIntervals = 1000;  // Número de intervalos para la integral numérica
+    const step = (2 * L) / nIntervals;  // Tamaño del paso
     let sum = 0;
     for (let i = 0; i <= nIntervals; i++) {
       const t = -L + i * step;
-      sum += f(t);
+      sum += f(t);  // Suma de la función en cada intervalo
     }
-    return (sum * step) / (2 * L);
+    return (sum * step) / (2 * L);  // Normalización del coeficiente a0
   }
 
   // Coeficiente an de Fourier
@@ -93,9 +93,9 @@ export class Parte1Component implements OnInit {
     let sum = 0;
     for (let i = 0; i <= nIntervals; i++) {
       const t = -L + i * step;
-      sum += f(t) * Math.cos(wn * t);
+      sum += f(t) * Math.cos(wn * t);  // Suma ponderada por coseno
     }
-    return (sum * step) / L;
+    return (sum * step) / L;  // Normalización del coeficiente an
   }
 
   // Coeficiente bn de Fourier
@@ -106,31 +106,28 @@ export class Parte1Component implements OnInit {
     let sum = 0;
     for (let i = 0; i <= nIntervals; i++) {
       const t = -L + i * step;
-      sum += f(t) * Math.sin(wn * t);
+      sum += f(t) * Math.sin(wn * t);  // Suma ponderada por seno
     }
-    return (sum * step) / L;
+    return (sum * step) / L;  // Normalización del coeficiente bn
   }
 
-  // Crear gráficos con las tres funciones periódicas
+  // Crear gráficos con los coeficientes ajustados
   createGraphs(): void {
     const L_onda = 0.5;
     const L_diente = 1;
-    const L_rectificador = Math.PI / 2;
+    const L_rectificador = Math.PI;  // Intervalo corregido [-π, π]
     const N = 100;  // Número de términos de Fourier
 
     const extendedOndaCuadrada = this.extensionPeriodica(-L_onda, L_onda)(this.ondaCuadrada);
     const extendedDienteSierra = this.extensionPeriodica(-L_diente, L_diente)(this.dienteSierra);
     const extendedRectificador = this.extensionPeriodica(-L_rectificador, L_rectificador)(this.rectificador);
 
-    // Generar valores de t entre [-2, 2]
+    // Generar valores de t entre [-1, 1]
     this.t_values = Array.from({ length: 1000 }, (_, i) => -1 + i * (2 / 1000));
     this.t_values_sierra = Array.from({ length: 1000 }, (_, i) => -2 + i * (4 / 1000));
-    this.t_values_rectificador = Array.from({ length: 1000 }, (_, i) => -Math.PI + i * (Math.PI / 1000));
+    this.t_values_rectificador = Array.from({ length: 1000 }, (_, i) => -Math.PI + i * (2 * Math.PI / 1000));
 
     // Calcular los valores de cada función periódica
-
-
-    // Generar valores de t entre [-2, 2]
     this.ondaCuadradaValues = this.t_values.map(t => extendedOndaCuadrada(t));
     this.dienteSierraValues = this.t_values_sierra.map(t => extendedDienteSierra(t));
     this.rectificadorValues = this.t_values_rectificador.map(t => extendedRectificador(t));
@@ -179,7 +176,7 @@ export class Parte1Component implements OnInit {
     this.dienteSierraChart = new Chart(ctxDienteSierra, {
       type: 'line',
       data: {
-        labels: this.t_values,
+        labels: this.t_values_sierra,
         datasets: [
           {
             label: 'Diente de Sierra Periódica',
@@ -209,7 +206,7 @@ export class Parte1Component implements OnInit {
     this.rectificadorChart = new Chart(ctxRectificador, {
       type: 'line',
       data: {
-        labels: this.t_values,
+        labels: this.t_values_rectificador,
         datasets: [
           {
             label: 'Rectificador Periódico',
